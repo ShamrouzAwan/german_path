@@ -1,0 +1,17 @@
+name = "germanpath-media"
+main = "index.js"
+compatibility_date = "2026-09-15"
+
+[vars]
+PUBLIC_URL = "https://media.example.com"
+TOKEN_TTL_SECONDS = "900"
+
+[[r2_buckets]]
+binding = "R2_PRIMARY"
+bucket_name = "replace-with-primary-bucket"
+
+[[r2_buckets]]
+binding = "R2_SECONDARY"
+bucket_name = "replace-with-secondary-bucket"
+
+# Set WORKER_SECRET with `wrangler secret put WORKER_SECRET`.

@@ -26,6 +26,9 @@ require_once __DIR__ . '/Commerce/PaymentException.php';
 require_once __DIR__ . '/Commerce/CourseOfferService.php';
 require_once __DIR__ . '/Commerce/AccessService.php';
 require_once __DIR__ . '/Commerce/PaymentService.php';
+require_once __DIR__ . '/Media/MediaException.php';
+require_once __DIR__ . '/Media/WorkerMediaService.php';
+require_once __DIR__ . '/Media/MediaAccessService.php';
 require_once __DIR__ . '/Mail/EmailService.php';
 require_once __DIR__ . '/Auth/AuthException.php';
 require_once __DIR__ . '/Auth/AuthService.php';
@@ -50,6 +53,8 @@ $auth = new GermanPath\Auth\AuthService($database, $config, $logger, $email, $au
 $offers = new GermanPath\Commerce\CourseOfferService($content);
 $access = new GermanPath\Commerce\AccessService($database, $audit);
 $payments = new GermanPath\Commerce\PaymentService($database, $offers, $access, $audit);
+$workerMedia = new GermanPath\Media\WorkerMediaService($config, $logger);
+$media = new GermanPath\Media\MediaAccessService($content, $access, $workerMedia);
 
 return [
     'root' => $rootPath,
@@ -62,5 +67,7 @@ return [
     'offers' => $offers,
     'access' => $access,
     'payments' => $payments,
+    'worker_media' => $workerMedia,
+    'media' => $media,
     'applied_migrations' => $appliedMigrations,
 ];

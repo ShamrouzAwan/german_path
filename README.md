@@ -8,8 +8,7 @@ that returns short-lived R2 URLs.
 
 ## Current status
 
-Phase 3 authentication and the first commerce/access workflow are implemented
-on top of the Phase 1 foundation and Phase 2 content engine:
+Phases 1–5 are implemented on top of the shared-hosting foundation:
 
 - central configuration with `.env` support
 - secure session defaults and CSRF primitives
@@ -23,10 +22,12 @@ on top of the Phase 1 foundation and Phase 2 content engine:
 - course-specific offers, payment submissions, manual admin review, and
   lifetime/expiring course access
 - student purchase and admin payment-review routes
+- protected Worker/R2 media signing, course authorization, MP4/SRT delivery,
+  and a retry-safe lesson player
 
 See [`project.md`](project.md) for the living implementation record and next
-module. Payment-proof uploads, protected media access, and production
-administration are not complete.
+module. Payment-proof uploads, production Worker deployment, CORS policy, and
+full administration are not complete.
 
 ## Local development
 

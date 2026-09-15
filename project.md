@@ -18,7 +18,7 @@ SQLite shared hosting. The canonical production domain is configured through
 
 ## Current module
 
-**Phase 4 — Commerce and course access: complete for this action.**
+**Phase 5 — R2/Worker integration: complete for this action.**
 
 ## Completed
 
@@ -59,6 +59,8 @@ SQLite shared hosting. The canonical production domain is configured through
 - Added authentication tests and live registration/login/account smoke tests.
 - Added persistent login-attempt throttling for email/IP pairs and structured
   authentication audit events.
+- Completed Phase 4 authorization workflows: teacher-specific course offers,
+  lifetime and expiring access, manual grants, revocation, and access checks.
 - Added course-specific, teacher-specific offers and duration pricing in JSON.
 - Added payment methods, pending payment submissions, admin approval/rejection,
   lifetime or expiring course access, and access event history.
@@ -66,6 +68,14 @@ SQLite shared hosting. The canonical production domain is configured through
   protection.
 - Added payment/access tests for offers, pending state, authorization,
   approval, rejection, expiration, lifetime access, and revocation.
+- Added configurable Worker signing client with timeout and response
+  validation.
+- Added media authorization for free and paid lessons, signed MP4/SRT URLs,
+  protected `/media/{id}` responses, and a retry-safe `/watch/{slug}` player.
+- Added a reference Cloudflare Worker with HMAC-expiring media URLs, storage
+  binding selection, and R2 streaming.
+- Added media tests for authorization, per-item storage mapping, MP4/SRT keys,
+  secret isolation, free media, and invalid Worker responses.
 
 ## Database changes
 
@@ -89,9 +99,9 @@ submissions, course access, and access history tables.
 
 - Content fixtures are development examples; media files and Worker access do
   not exist yet.
-- Payment-proof uploads, protected media access, Worker/R2 integration, full
-  administration, payment notifications, and progress tracking are not
-  implemented.
+- Payment-proof uploads, deployed Worker/R2 production configuration, final
+  CORS/custom-domain policy, full administration, payment notifications, and
+  progress tracking are not implemented.
 - PHP was installed in the development environment for verification; hosting
   still needs PDO SQLite enabled.
 - CORS is intentionally not configured yet.
@@ -105,7 +115,7 @@ media security audits remain required before production.
 ## Exact next steps
 
 1. Add secure payment-proof upload handling and confirmation/rejection emails.
-2. Add media authorization and Cloudflare Worker/R2 protected delivery.
+2. Deploy and verify the Worker/R2 bindings, CORS policy, and custom domain.
 3. Add content administration/reporting and progress tracking.
 4. Keep development fixtures clearly separate from production content.
 

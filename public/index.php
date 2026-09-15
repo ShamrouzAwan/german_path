@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use GermanPath\Auth\AuthException;
 use GermanPath\Commerce\PaymentException;
+use GermanPath\Media\MediaException;
 use GermanPath\Http\Request;
 use GermanPath\Http\Response;
 use GermanPath\Http\Router;
@@ -15,6 +16,7 @@ $app = require dirname(__DIR__) . '/app/bootstrap.php';
 $config = $app['config'];
 $auth = $app['auth'];
 $payments = $app['payments'];
+$media = $app['media'];
 
 $router = new Router();
 $csrfField = static fn (): string => '<input type="hidden" name="_csrf" value="' . e(Session::csrfToken()) . '">';
@@ -329,6 +331,77 @@ $router->post('/admin/payments/{id}/reject', static function (Request $request, 
     }
 });
 
+$router->get('/watch/{slug}', static function (Request $request, array $params) use ($app, $auth, $config, $authPage): Response {
+    $item = null;
+    foreach (['videos', 'shorts'] as $collection) {
+        $candidate = $app['content']->findBySlug($collection, (string) $params['slug']);
+        if ($candidate !== null) {
+            $item = $candidate;
+            break;
+        }
+    }
+    if ($item === null) {
+        return Response::text('Not Found', 404);
+    }
+    if (($item['is_free'] ?? false) !== true && $auth->currentUser() === null) {
+        return Response::redirect('/login');
+    }
+    $mediaId = e((string) $item['id']);
+    $title = e((string) $item['title']);
+    $content = '<section class="watch-shell"><p class="eyebrow">Geschützte Lektion</p><h1>' . $title . '</h1>
+        <p>' . e((string) $item['description']) . '</p>
+        <div class="player-card">
+            <video id="lesson-player" controls preload="metadata" playsinline aria-label="' . $title . '"></video>
+            <p id="player-status" class="notice">Videolink wird sicher geladen …</p>
+            <button id="player-retry" class="button-secondary" type="button" hidden>Erneut versuchen</button>
+        </div>
+        <noscript><p class="notice error">JavaScript ist für den geschützten Videoplayer erforderlich.</p></noscript>
+        <script>
+        (() => {
+            const player = document.getElementById("lesson-player");
+            const status = document.getElementById("player-status");
+            const retry = document.getElementById("player-retry");
+            const load = async () => {
+                status.hidden = false;
+                retry.hidden = true;
+                status.textContent = "Videolink wird sicher geladen …";
+                try {
+                    const response = await fetch("/media/' . $mediaId . '", {headers: {"Accept": "application/json"}});
+                    const payload = await response.json();
+                    if (!response.ok) throw new Error(payload.error || "Die Lektion konnte nicht geladen werden.");
+                    player.src = payload.video_url;
+                    if (payload.subtitle_url) {
+                        const track = document.createElement("track");
+                        track.kind = "subtitles";
+                        track.label = "Deutsch";
+                        track.srclang = "de";
+                        track.src = payload.subtitle_url;
+                        player.appendChild(track);
+                    }
+                    status.textContent = "Bereit zum Abspielen.";
+                } catch (error) {
+                    status.textContent = error.message || "Die Lektion konnte nicht geladen werden.";
+                    status.className = "notice error";
+                    retry.hidden = false;
+                }
+            };
+            retry.addEventListener("click", load);
+            load();
+        })();
+        </script>
+    </section>';
+    return Response::html(renderLayout($config, $item['title'], $content));
+});
+
+$router->get('/media/{id}', static function (Request $request, array $params) use ($auth, $media): Response {
+    $user = $auth->currentUser();
+    try {
+        return Response::json($media->signForUser($user === null ? null : (int) $user['id'], (string) $params['id']));
+    } catch (MediaException $exception) {
+        return Response::json(['error' => $exception->getMessage()], $exception->status());
+    }
+});
+
 $router->post('/account/profile', static function (Request $request) use ($auth, $authPage): Response {
     $user = $auth->currentUser();
     if ($user === null) {
@@ -406,11 +479,19 @@ $router->get('/course/{slug}', static function (Request $request, array $params)
     foreach ($course['learning_outcomes'] as $outcome) {
         $content .= '<li>' . e($outcome) . '</li>';
     }
+    $lessons = '';
+    foreach ($app['content']->loadCollection('videos') as $video) {
+        if ($video['course_id'] !== $course['id'] || $video['published'] !== true) {
+            continue;
+        }
+        $lessons .= '<li><a href="/watch/' . e($video['slug']) . '">' . e($video['title']) . '</a>'
+            . ($video['is_free'] ? ' <span class="status">Kostenlos</span>' : '') . '</li>';
+    }
     $content .= '</ul></article><article class="card"><h2>Format</h2><p>'
         . e((string) $course['total_videos']) . ' Videos · ' . e($course['duration'])
         . '</p><p>Lehrkräfte: ' . e(implode(', ', $course['teacher_ids'])) . '</p>'
         . ($course['is_free'] ? '' : '<p><a class="button-link" href="/purchase/' . e($course['slug']) . '">Kurszugang auswählen</a></p>')
-        . '</article></section>';
+        . '</article><article class="card"><h2>Lektionen</h2><ol>' . $lessons . '</ol></article></section>';
     return Response::html(renderLayout($config, $course['title'], $content));
 });
 

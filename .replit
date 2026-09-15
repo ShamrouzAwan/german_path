@@ -1,1 +1,1 @@
-modules = ["php-8.2"]
+modules = ["php-8.2", "nodejs-24"]

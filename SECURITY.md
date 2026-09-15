@@ -22,7 +22,12 @@ The foundation establishes these defaults:
   written to the audit log
 - payment submissions are pending by default; they do not grant access until
   an admin approves them
+- Worker signing requests are server-to-server and keep the Worker secret out
+  of browser responses
+- media keys reject absolute paths and parent-directory traversal
+- signed media URLs are short-lived and protected media requires active,
+  non-revoked course access
 
-Before production, payment-proof uploads, media-level access control, Worker
-authentication, payment notifications, and a full security regression pass
-must be implemented and tested.
+Before production, payment-proof uploads, Worker deployment and binding
+configuration, CORS/custom-domain policy, payment notifications, and a full
+security regression pass must be implemented and tested.

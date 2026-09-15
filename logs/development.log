@@ -20,3 +20,7 @@
 [2026-09-15T00:00:00Z] COMMERCE integration: added student purchase and admin payment-review routes; payment claims remain pending until manual approval.
 [2026-09-15T00:00:00Z] TESTS passed: PHP lint, foundation/content/auth/payment suites, and live HTTP smoke tests for courses, health, and unauthenticated purchase access.
 [2026-09-15T00:00:00Z] TODO: secure payment-proof uploads, payment notifications, protected media delivery, Worker/R2 integration, progress, and production deployment hardening remain.
+[2026-09-15T00:00:00Z] STATUS correction: the master specification contains 11 phases; Phases 1-4 are complete, Phase 6 commerce is in progress, and Phases 5 and 7-11 remain incomplete or not started.
+[2026-09-15T00:00:00Z] MEDIA started: added WorkerMediaService, MediaAccessService, protected media routes, retry-safe player, and reference Cloudflare Worker/R2 implementation.
+[2026-09-15T00:00:00Z] MEDIA security: validated per-item storage/key metadata, kept Worker secrets server-side, enforced course access, and limited signed URL lifetime.
+[2026-09-15T00:00:00Z] TESTS passed: PHP lint, Worker JavaScript syntax check, all foundation/content/auth/payment/media tests, and live watch/media route smoke checks.
