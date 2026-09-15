@@ -14,7 +14,7 @@ SQLite shared hosting. The canonical production domain is configured through
 - `content/`: reserved for modular static JSON metadata
 - `storage/`: runtime database/private data; ignored by Git
 - `logs/`: development history plus runtime logs
-- Cloudflare Worker/R2: deferred protected media layer
+- Cloudflare Worker/R2: implemented protected media layer; deployment deferred
 
 ## Current module
 
@@ -97,8 +97,8 @@ submissions, course access, and access history tables.
 
 ## Known limitations
 
-- Content fixtures are development examples; media files and Worker access do
-  not exist yet.
+- Content fixtures are development examples; real media files and production
+  Worker/R2 bindings are not configured yet.
 - Payment-proof uploads, deployed Worker/R2 production configuration, final
   CORS/custom-domain policy, full administration, payment notifications, and
   progress tracking are not implemented.
@@ -121,4 +121,6 @@ media security audits remain required before production.
 
 ## Production-readiness status
 
-Not production-ready. The current work is the tested foundation only.
+Not production-ready. Phases 1–5 are implemented and tested, but production
+deployment, uploads, full administration, progress, and final security/SEO/
+performance verification remain.

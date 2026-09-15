@@ -67,7 +67,17 @@ function json(data, status = 200) {
 
 function bucketFor(env, storage) {
   if (!/^[a-z0-9][a-z0-9_-]*$/.test(storage)) return null;
-  return env[`R2_${storage.replace(/-/g, "_").toUpperCase()}`] || null;
+  const normalized = storage.replace(/-/g, "_").toUpperCase();
+  const binding = normalized.startsWith("R2_") ? normalized : `R2_${normalized}`;
+  return env[binding] || null;
+}
+
+function validKey(key) {
+  return typeof key === "string"
+    && key.length > 0
+    && !key.startsWith("/")
+    && !key.includes("..")
+    && !key.includes("\\");
 }
 
 export default {
@@ -79,7 +89,9 @@ export default {
       }
       let body;
       try { body = await request.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
-      if (!body.media_id || !body.storage || !body.video || !bucketFor(env, body.storage)) {
+      if (!body.media_id || !body.storage || !validKey(body.video)
+        || (body.subtitle && !validKey(body.subtitle))
+        || !bucketFor(env, body.storage)) {
         return json({ error: "Invalid media request" }, 422);
       }
       const ttl = Math.min(Math.max(Number(body.expires_in) || 300, 30), Number(env.TOKEN_TTL_SECONDS) || 900);

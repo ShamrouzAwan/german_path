@@ -11,7 +11,7 @@ The intended protected-media flow is:
 
 The Worker URL and secret are configuration values only. They must never be
 sent to browser JavaScript, stored in content JSON, or written to logs. CORS is
-intentionally deferred until the final media flow.
+deferred until the production domain and custom media policy are fixed.
 
 ## Implemented integration
 
