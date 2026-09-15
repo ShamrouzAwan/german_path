@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "type": "site_settings",
+  "id": "site-default",
+  "site_name": "GermanPath",
+  "tagline": "Deutsch lernen. Schritt für Schritt.",
+  "default_language": "de"
+}

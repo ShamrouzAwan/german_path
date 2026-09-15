@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "type": "video",
+  "id": "video-kennenlernen",
+  "slug": "kennenlernen",
+  "title": "Sich vorstellen und kennenlernen",
+  "description": "Eine kostenlose Lektion für erste Gespräche auf Deutsch.",
+  "thumbnail": "/assets/videos/kennenlernen.jpg",
+  "duration": "06:30",
+  "teacher_id": "teacher-anna",
+  "course_id": "course-b1-german",
+  "playlist_id": "playlist-b1-grammar",
+  "position": 3,
+  "published": true,
+  "is_free": true,
+  "storage": "r2-primary",
+  "video": "free/kennenlernen.mp4",
+  "subtitle": "free/kennenlernen.srt",
+  "subtitle_tracks": []
+}

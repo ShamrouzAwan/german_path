@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "type": "teacher",
+  "id": "teacher-lukas",
+  "name": "Lukas Weber",
+  "display_name": "Lukas",
+  "bio": "Lukas zeigt, wie du deutsche Gespräche sicher und natürlich führst.",
+  "photo": "/assets/teachers/lukas.jpg",
+  "country": "DE",
+  "languages": ["de", "en", "tr"]
+}

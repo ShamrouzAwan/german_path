@@ -1,0 +1,2129 @@
+# GermanPath — Master Development Specification
+
+You are building **GermanPath**, a production-ready German-learning web platform.
+
+GermanPath is conceptually similar to YouTube + Coursera/Udemy, but focused entirely on German-language learning.
+
+The project must be designed from the beginning for **low-cost deployment on shared hosting**, specifically a hosting environment that supports **PHP + SQLite** but does not provide a VPS, Python server, Node server, Docker, or continuously running background processes.
+
+The project will initially be developed through Replit AI and may be moved between multiple Replit accounts. Every Replit account will connect the project to the same GitHub repository. Therefore:
+
+* Never depend on hidden Replit-only project state.
+* Never store essential project information only inside Replit.
+* The GitHub repository must contain everything required to continue development.
+* Keep the application portable and deployable to ordinary PHP shared hosting.
+* Avoid paid services and unnecessary third-party subscriptions.
+* Prefer PHP standard functionality and lightweight/open-source libraries when genuinely necessary.
+* Do not introduce infrastructure that requires a VPS.
+* Cloudflare Workers and Cloudflare R2 are allowed because they are external serverless services already used by the project.
+* The frontend must remain lightweight enough for inexpensive shared hosting.
+
+---
+
+# 1. DEVELOPMENT METHODOLOGY
+
+Build the application **modularly, one module at a time**.
+
+Do NOT attempt to generate the entire finished application in one step.
+
+At the beginning, inspect the repository and establish a clean project structure.
+
+Then implement modules in a logical order, fully completing and testing each module before moving to the next.
+
+Every meaningful development action must be recorded in:
+
+```text
+logs/development.log
+```
+
+The log must contain timestamps and clear descriptions of:
+
+* module started
+* files created
+* files modified
+* database migrations
+* configuration changes
+* tests performed
+* bugs discovered
+* bugs fixed
+* security changes
+* unfinished work
+* deployment-related changes
+* decisions that affect future development
+
+Create and continuously maintain:
+
+```text
+project.md
+```
+
+`project.md` is the living master project document.
+
+It must contain:
+
+* project overview
+* current architecture
+* current module
+* completed modules
+* TODOs
+* known issues
+* deferred features
+* security considerations
+* database changes
+* JSON/content schema changes
+* Worker integration status
+* deployment requirements
+* production-readiness checklist
+* exact next steps
+
+Every Replit AI action must update `project.md` and `logs/development.log`.
+
+Never mark something complete unless it has actually been implemented and tested.
+
+If a feature cannot be completed during the current action, explicitly record it as incomplete rather than pretending it is finished.
+
+---
+
+# 2. CORE ARCHITECTURE
+
+GermanPath consists of four major layers:
+
+```text
+                    GERMANPATH
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+        PHP + SQLite          Static JSON
+              │                   │
+              │           courses / teachers /
+              │           playlists / videos /
+              │           thumbnails / metadata
+              │
+              ▼
+        Authorization
+              │
+              ▼
+     Cloudflare R2 Worker
+              │
+       temporary signed URL
+              │
+              ▼
+       Cloudflare R2 storage
+```
+
+The website is responsible for:
+
+* users
+* authentication
+* authorization
+* purchases
+* payments
+* course access
+* user progress
+* administration
+* dynamic data
+* site settings
+* moderation
+* analytics
+* security
+* content presentation
+
+JSON files are responsible for **static content metadata**.
+
+R2 is responsible for actual media/file storage.
+
+The Cloudflare Worker is responsible for secure temporary access to R2 media.
+
+---
+
+# 3. DOMAIN
+
+Production website domain:
+
+```text
+https://germanpath.site
+```
+
+Do not hardcode localhost-only assumptions.
+
+All URLs, routing, assets, canonical URLs, redirects, email links, and configuration must support:
+
+```text
+germanpath.site
+```
+
+through configuration/environment rather than scattered hardcoded strings.
+
+CORS for the media Worker should be implemented **at the very end**, after the website is fully functional.
+
+Do not prematurely lock CORS to a domain during early development.
+
+---
+
+# 4. TECHNOLOGY REQUIREMENTS
+
+Production backend:
+
+```text
+PHP
+SQLite
+HTML
+CSS
+JavaScript
+```
+
+Use modern, maintainable PHP.
+
+Use PDO for SQLite.
+
+Use prepared statements everywhere.
+
+Use password hashing through PHP's password hashing APIs.
+
+Use secure PHP sessions.
+
+Use CSRF protection on all state-changing forms.
+
+Use strict input validation.
+
+Use output escaping.
+
+Do not concatenate unsafe user data into SQL.
+
+Do not store plaintext passwords.
+
+Do not store plaintext payment credentials or unnecessary sensitive information.
+
+Never expose Cloudflare R2 credentials to frontend JavaScript or users.
+
+Never expose Worker secrets.
+
+Never put secrets in course JSON.
+
+Never put secrets into Git.
+
+Create a clear configuration system for:
+
+```text
+database
+site URL
+mail configuration
+Worker URL
+Worker authentication secret
+upload settings
+environment mode
+logging
+```
+
+Sensitive configuration must be outside publicly accessible source files where possible.
+
+Provide a production-safe `.gitignore`.
+
+---
+
+# 5. GENERAL WEBSITE CONCEPT
+
+GermanPath is a German-learning media platform.
+
+The homepage should feel like a polished modern learning/video platform.
+
+It should contain:
+
+* featured courses
+* teachers
+* free learning content
+* paid courses
+* playlists
+* short videos
+* recently added content
+* popular content
+* learning categories
+* search
+* clear navigation
+* login/register
+* user account
+* visually attractive German-themed design
+
+The website should have a strong German-learning identity.
+
+Avoid making it look like a generic corporate LMS.
+
+The visual design should feel:
+
+* modern
+* educational
+* friendly
+* premium
+* interactive
+* German-themed
+* clean
+* highly readable
+* responsive
+* mobile-friendly
+
+Use SVG icons rather than emoji inside the website UI.
+
+Do not use a giant unnecessary frontend framework when vanilla JS/CSS is sufficient for shared hosting.
+
+---
+
+# 6. CONTENT MODEL
+
+Static content should primarily live in JSON files.
+
+Do not duplicate large amounts of static course metadata in SQLite.
+
+JSON should describe:
+
+## Teachers
+
+Examples of static fields:
+
+```text
+id
+name
+display_name
+bio
+photo
+country
+languages
+website/social links if applicable
+```
+
+## Courses
+
+A course should support detailed metadata similar to professional platforms such as Udemy/Coursera:
+
+```text
+id
+slug
+title
+short_description
+description
+teacher_ids
+level
+language
+category
+cover
+thumbnail
+banner
+tags
+requirements
+learning_outcomes
+target_audience
+duration
+total_lessons
+total_videos
+featured
+free/paid
+pricing metadata
+access options
+published
+```
+
+A single course may be associated with **multiple teachers**.
+
+Example:
+
+```text
+B1 German
+ ├── Teacher A version
+ ├── Teacher B version
+ └── Teacher C version
+```
+
+The data model must support that without hacks.
+
+---
+
+# 7. COURSE OFFER / TEACHER MODEL
+
+The website must distinguish between a generic learning course and a specific teacher's offering when required.
+
+For example:
+
+```text
+B1 German
+    ├── B1 with Teacher A
+    ├── B1 with Teacher B
+    └── B1 with Teacher C
+```
+
+A user should be able to select the teacher/version they want and purchase that specific offering.
+
+Do not assume that one course always belongs to one teacher.
+
+Design the JSON schema so teacher relationships are explicit and scalable.
+
+---
+
+# 8. VIDEO / PLAYLIST / SHORT CONTENT
+
+Support at least:
+
+```text
+video
+playlist
+course
+short
+free lesson
+```
+
+Videos must support static metadata such as:
+
+```text
+id
+title
+slug
+description
+thumbnail
+duration
+teacher
+course
+playlist
+position/order
+published
+free/paid
+storage
+video
+subtitle
+additional subtitle tracks if needed
+```
+
+A playlist may contain videos from one or more sources as appropriate.
+
+A course may contain multiple playlists.
+
+A course may contain many videos.
+
+The site should render video lists in an attractive, interactive manner.
+
+---
+
+# 9. CRITICAL STORAGE MODEL
+
+The same course may exist across **multiple R2 accounts/buckets**.
+
+Therefore NEVER design:
+
+```text
+course → one bucket
+```
+
+Instead:
+
+```text
+course
+ ├── video 1 → storage A
+ ├── video 2 → storage A
+ ├── video 3 → storage B
+ ├── video 4 → storage C
+ └── video 5 → storage B
+```
+
+Storage must be specified at the media/content-item level.
+
+Example:
+
+```json
+{
+  "id": "b1-001",
+  "title": "Infinitiv + zu",
+  "storage": "b1-old",
+  "video": "01 - B1 ｜ Lektion 1 ｜ Infinitiv + zu.mp4",
+  "subtitle": "01 - B1 ｜ Lektion 1 ｜ Infinitiv + zu.srt",
+  "thumbnail": "01.jpg"
+}
+```
+
+The course itself must not be assumed to have only one storage location.
+
+---
+
+# 10. JSON CONTENT SYSTEM
+
+Create a robust JSON content structure.
+
+The static JSON system should be modular.
+
+Recommended conceptual organization:
+
+```text
+content/
+├── teachers/
+├── courses/
+├── playlists/
+├── videos/
+├── shorts/
+├── pages/
+└── site/
+```
+
+The exact structure can be improved if a better architecture is discovered.
+
+The website should have a reusable PHP content loader that:
+
+* loads JSON
+* validates it
+* handles missing files
+* handles malformed JSON
+* provides predictable errors
+* caches safely where appropriate
+* avoids repeatedly parsing huge collections unnecessarily
+* supports future schema versions
+
+Do not silently ignore malformed content.
+
+The admin should be able to see content-loading errors.
+
+---
+
+# 11. STATIC VS DYNAMIC DATA
+
+Static content belongs in JSON.
+
+Dynamic data belongs in SQLite.
+
+SQLite should contain things such as:
+
+```text
+users
+sessions if required
+email verification status
+password reset data
+purchases
+payments
+course access
+user progress
+bookmarks
+likes
+comments
+notifications
+admin actions
+site settings
+audit logs
+```
+
+Do not duplicate static video metadata into SQLite merely because it is convenient.
+
+The design must tolerate JSON content changing independently of database data.
+
+---
+
+# 12. USER SYSTEM
+
+Implement a complete account system.
+
+Required:
+
+* registration
+* login
+* logout
+* secure session handling
+* password hashing
+* password reset
+* email verification
+* resend verification email
+* account settings
+* profile
+* password change
+* email change
+* account status
+* admin-controlled account state
+
+Email verification should use the email service available in the development/deployment environment, while isolating mail functionality behind a mail service abstraction so the project can later switch providers without rewriting the rest of the application.
+
+Do not hardcode one specific mail vendor into business logic.
+
+Use secure time-limited tokens for:
+
+* email verification
+* password reset
+* sensitive account actions
+
+Tokens must not be stored in plaintext if there is a safer design available.
+
+---
+
+# 13. EMAIL SYSTEM
+
+Build a reusable email service.
+
+Support templates for:
+
+```text
+welcome
+email verification
+password reset
+purchase submission received
+payment approved
+payment rejected
+course access granted
+course access revoked
+admin notifications
+```
+
+Emails should be professional and branded as GermanPath.
+
+Keep email sending separate from controllers and business logic.
+
+---
+
+# 14. COURSE PURCHASING
+
+Only video courses are paid.
+
+The following remain free:
+
+* normal web pages
+* images
+* quizzes
+* PDFs
+* interactive learning tools
+* free videos
+* other non-paid learning materials
+
+A video course may have:
+
+```text
+1 month
+3 months
+lifetime
+```
+
+access options.
+
+The admin must be able to control prices independently for every course/teacher offering/access duration.
+
+Example concept:
+
+```text
+B1 with Teacher A
+  1 month     = price
+  3 months    = price
+  lifetime    = price
+```
+
+Do not hardcode prices in PHP.
+
+Pricing should be content/configuration driven and editable through the admin interface.
+
+---
+
+# 15. PAYMENT SYSTEM
+
+Payment is manually confirmed by the administrator.
+
+The system should support payment methods such as:
+
+```text
+Bank transfer
+JazzCash
+EasyPaisa
+```
+
+Admin must be able to configure:
+
+* payment method name
+* account/title
+* account number
+* IBAN where appropriate
+* JazzCash number
+* EasyPaisa number
+* instructions
+* payment notes
+* whether the method is enabled
+
+After a user selects a course/access duration:
+
+```text
+User
+ ↓
+select course
+ ↓
+select teacher/version
+ ↓
+select duration
+ ↓
+select payment method
+ ↓
+system displays payment instructions
+ ↓
+user pays
+ ↓
+user submits payment details
+ ↓
+user uploads screenshot/proof
+ ↓
+submission stored
+ ↓
+admin reviews
+ ↓
+admin approves/rejects
+```
+
+Payment submissions must include useful structured fields such as:
+
+```text
+user
+course/product
+selected duration
+payment method
+payer name
+payer account/number where appropriate
+transaction/reference number
+amount
+payment timestamp
+screenshot
+optional note
+```
+
+Do not log sensitive financial information unnecessarily.
+
+Uploaded payment screenshots must:
+
+* be validated
+* have safe generated filenames
+* be stored outside executable PHP locations
+* prevent script execution
+* enforce size/type limits
+* never trust user-provided extensions
+* be accessible only to authorized administrators
+
+The admin should be able to:
+
+* view submission
+* view payment screenshot
+* approve
+* reject
+* add internal note
+* see submission history
+* grant/revoke access
+
+---
+
+# 16. COURSE ACCESS
+
+Access is dynamic and belongs in SQLite.
+
+A user may have:
+
+```text
+course A → active until date
+course B → lifetime
+course C → expired
+```
+
+The system must support:
+
+* manual access grants
+* purchase-based access
+* manual revocation
+* expiration
+* lifetime access
+* access history
+* multiple simultaneous purchased courses
+* multiple purchases
+* teacher-specific course versions
+
+The authorization layer must be reusable.
+
+For every protected video request:
+
+```text
+logged-in user
+      ↓
+is user active?
+      ↓
+does user have access?
+      ↓
+is course/version correct?
+      ↓
+is requested video part of authorized content?
+      ↓
+yes → request signed media URL
+```
+
+Never rely on frontend JavaScript to determine access.
+
+Never assume that knowing a video ID means the user owns it.
+
+---
+
+# 17. CLOUDFLARE R2 / WORKER INTEGRATION
+
+A Cloudflare Worker already exists conceptually as:
+
+```text
+r2-video-worker
+```
+
+It is designed to support multiple R2 accounts.
+
+The website must communicate with the Worker through a reusable PHP service.
+
+Current conceptual API:
+
+```text
+POST /api/v1/media
+```
+
+Request:
+
+```json
+{
+  "account": "b1-old",
+  "bucket": "b1-old",
+  "media": "lesson.mp4",
+  "subtitle": "lesson.srt"
+}
+```
+
+The Worker returns temporary signed URLs.
+
+The PHP website must:
+
+* authenticate to the Worker using a server-side secret
+* never expose that secret to the browser
+* validate all content metadata before requesting media
+* handle Worker failures gracefully
+* handle missing/expired URLs
+* never save temporary signed URLs permanently in SQLite
+* request them when needed
+
+The Worker remains the secure media-access layer.
+
+The browser ultimately receives temporary URLs and streams directly from R2.
+
+Do not proxy large video files through Hostinger PHP.
+
+Do not attempt to download entire videos through the PHP server.
+
+---
+
+# 18. STORAGE IDENTIFIERS
+
+Static JSON should reference a storage identifier:
+
+```json
+"storage": "b1-old"
+```
+
+This is a logical storage ID.
+
+The actual R2 account/bucket mapping is infrastructure configuration, not public content metadata.
+
+The system must support:
+
+```text b1-old
+r22
+r23
+r24
+r25
+...
+```
+
+and a future course can contain media spread across several of them.
+
+The application must never assume that storage IDs equal courses.
+
+---
+
+# 19. VIDEO PLAYER
+
+Create a reusable HTML5 video player component.
+
+It must support:
+
+* MP4
+* subtitles
+* subtitle language selection
+* full screen
+* playback controls
+* responsive sizing
+* mobile compatibility
+* loading state
+* error state
+* retry
+* poster/thumbnail
+* duration
+* keyboard accessibility where practical
+
+Video URLs are dynamically supplied after authorization.
+
+Subtitle files should use `<track>` appropriately.
+
+Build the player so more subtitle languages can be added later.
+
+Do not permanently expose direct R2 object URLs in static HTML.
+
+Do not build a fake "security" system based solely on hiding the video URL.
+
+The actual protection is:
+
+```text
+private R2
++
+PHP authorization
++
+authenticated Worker request
++
+short-lived signed R2 URL
+```
+
+---
+
+# 20. VIDEO/LESSON ACCESS FAILURE UX
+
+If the signed URL fails or expires:
+
+Show a proper user-facing error rather than a blank player.
+
+Provide a retry mechanism.
+
+Log technical details server-side without exposing credentials or internal secrets.
+
+Differentiate between:
+
+```text
+not authorized
+content unavailable
+storage unavailable
+temporary Worker failure
+malformed content configuration
+unexpected server error
+```
+
+---
+
+# 21. ADMIN PANEL
+
+Build a comprehensive admin panel.
+
+The admin panel should be modular.
+
+At minimum:
+
+```text
+Dashboard
+Users
+Teachers
+Courses
+Videos
+Playlists
+Shorts
+Free Content
+Purchases
+Payment Submissions
+Access Control
+Prices
+Payment Methods
+Site Settings
+Theme/Appearance
+Email
+Storage/Worker status
+Logs
+Security
+Backups
+System Information
+```
+
+The exact menu can evolve.
+
+Admin features should be granular enough to control almost every important aspect of the website.
+
+---
+
+# 22. ADMIN USER MANAGEMENT
+
+Admin should be able to:
+
+* view users
+* search users
+* filter users
+* inspect account
+* disable/enable account
+* manually verify email if appropriate
+* reset password workflow
+* grant course access
+* revoke course access
+* set expiration
+* grant lifetime access
+* view purchases
+* view payment submissions
+* view progress
+* inspect account activity
+* add administrative notes
+* see audit history
+
+Do not allow destructive operations without confirmation.
+
+Use CSRF protection.
+
+---
+
+# 23. ADMIN COURSE MANAGEMENT
+
+Admin should be able to:
+
+* create/edit course metadata
+* assign teachers
+* configure teacher-specific offerings
+* configure pricing
+* publish/unpublish
+* feature/unfeature
+* mark free/paid
+* configure course ordering
+* inspect associated videos
+* inspect playlists
+* inspect storage IDs
+* validate JSON references
+* detect missing thumbnails
+* detect missing subtitle/video objects where possible
+
+Because static metadata is JSON-driven, admin editing should not create unnecessary duplication in SQLite.
+
+The architecture should clearly distinguish:
+
+```text static content source
+vs
+dynamic commercial/access data
+```
+
+---
+
+# 24. THEME / COLOR ADMIN PANEL
+
+Create a dedicated admin interface for visual styling.
+
+The site should use centralized CSS custom properties such as:
+
+```css
+--color-primary
+--color-secondary
+--color-accent
+--color-background
+--color-surface
+--color-surface-elevated
+--color-text
+--color-text-muted
+--color-border
+--color-success
+--color-warning
+--color-danger
+--color-link
+--color-hover
+...
+```
+
+Use many thoughtfully designed variables, not just 2–3 colors.
+
+Admin should be able to modify the visual identity without editing source code.
+
+The theme editor should support:
+
+* color controls
+* background colors
+* text colors
+* accent colors
+* card colors
+* border colors
+* button colors
+* hover colors
+* typography-related controls where appropriate
+* border radius
+* spacing scale where safe
+* shadows
+* navigation appearance
+* player accents
+
+Provide a live preview where practical.
+
+The theme must remain accessible and readable even when colors are changed.
+
+Store dynamic theme settings in SQLite.
+
+Do not generate unsafe arbitrary CSS from user input.
+
+Sanitize/validate values.
+
+---
+
+# 25. GERMAN VISUAL IDENTITY
+
+The visual design should strongly communicate German learning.
+
+Possible visual language:
+
+* subtle German-inspired color palette
+* educational illustrations
+* clean typography
+* modern cards
+* language-learning motifs
+* flags used tastefully when appropriate
+* subtle German-language UI elements where suitable
+
+Do not make the site look like a government website.
+
+Do not overuse the German flag.
+
+The design should feel premium and modern.
+
+---
+
+# 26. SEARCH AND DISCOVERY
+
+Because the site behaves somewhat like YouTube:
+
+Implement a searchable discovery system.
+
+Search should cover:
+
+* video titles
+* course titles
+* teachers
+* playlists
+* shorts
+* tags
+* descriptions
+
+Use an efficient approach suitable for SQLite and the expected scale.
+
+Do not immediately introduce Elasticsearch or an external search server.
+
+Support:
+
+* search
+* filtering
+* categories
+* teacher
+* level
+* free/paid
+* content type
+
+---
+
+# 27. HOME PAGE / DISCOVERY UX
+
+The homepage should dynamically display:
+
+* featured courses
+* all teachers
+* selected teacher content
+* paid courses
+* free courses
+* popular free videos
+* playlists
+* shorts
+* newly added content
+* learning categories
+
+Create reusable content-card components.
+
+The user should be able to browse the platform naturally without understanding the internal JSON architecture.
+
+---
+
+# 28. USER DASHBOARD
+
+Users should have:
+
+* purchased courses
+* active subscriptions/access
+* expired courses
+* continue learning
+* progress
+* saved/bookmarked content
+* payment submissions
+* account settings
+* notifications
+
+Show expiration clearly.
+
+For lifetime courses, display lifetime access clearly.
+
+---
+
+# 29. PROGRESS TRACKING
+
+Store dynamic progress in SQLite.
+
+At minimum:
+
+```text user
+video
+position
+completed
+last_watched
+```
+
+Use sensible update throttling so the database is not written continuously every second.
+
+Allow the user to resume where they stopped.
+
+Do not trust client-supplied course ownership.
+
+---
+
+# 30. FREE LEARNING CONTENT
+
+The site should provide a dedicated free-content area.
+
+Free content may include:
+
+* videos
+* shorts
+* quizzes
+* PDF resources
+* images
+* web lessons
+* interactive lessons
+* exercises
+* other educational material
+
+Free non-video learning content must remain accessible without a purchase unless explicitly configured otherwise.
+
+---
+
+# 31. INTERACTIVE LEARNING SYSTEM
+
+Design the content architecture so interactive learning can grow.
+
+Potential future content types:
+
+```text
+quiz
+flashcards
+exercise
+reading
+grammar lesson
+PDF
+image lesson
+interactive exercise
+```
+
+The system should be extensible.
+
+Do not build every possible learning tool immediately.
+
+Create a reusable content-type architecture so new modules can be added later.
+
+---
+
+# 32. SECURITY
+
+Treat security as a first-class feature.
+
+Implement:
+
+* secure sessions
+* session regeneration after login
+* session timeout strategy
+* CSRF protection
+* XSS prevention
+* SQL injection prevention
+* secure password hashing
+* secure reset tokens
+* secure verification tokens
+* rate limiting where practical
+* login brute-force protection
+* secure headers
+* file upload validation
+* path traversal protection
+* access-control checks
+* admin authorization
+* audit logging
+* safe error handling
+* no secret leakage
+
+Do not use "security through obscurity."
+
+Do not rely on Referer alone for media protection.
+
+Do not expose R2 credentials.
+
+Do not expose Worker credentials.
+
+---
+
+# 33. UPLOAD SECURITY
+
+Any uploaded file such as payment screenshots or future educational uploads must:
+
+* validate MIME/content
+* validate size
+* generate safe filenames
+* reject executable extensions
+* prevent PHP execution
+* store outside executable directories where possible
+* limit upload counts
+* enforce authorization
+* log administrative actions
+
+---
+
+# 34. ADMIN AUDIT LOG
+
+Create an audit trail for important administrative actions.
+
+Record events such as:
+
+```text admin login
+user disabled
+course access granted
+course access revoked
+payment approved
+payment rejected
+price changed
+payment method changed
+theme changed
+course published
+course unpublished
+content configuration changed
+```
+
+Never store passwords or secrets in audit logs.
+
+---
+
+# 35. ERROR HANDLING
+
+Build centralized application error handling.
+
+Have separate behavior for development and production.
+
+Development can provide detailed diagnostics.
+
+Production must provide safe user-facing error pages/messages.
+
+Log technical information server-side.
+
+Do not display stack traces, secrets, SQL queries, file paths, or credentials to ordinary users.
+
+---
+
+# 36. LOGGING
+
+Maintain useful application logs.
+
+At minimum:
+
+```text
+application errors
+authentication events
+payment events
+administrative events
+Worker failures
+JSON/content validation failures
+security warnings
+```
+
+Do not log:
+
+* passwords
+* secret keys
+* Worker authentication secrets
+* signed URLs
+* unnecessary financial information
+
+Logs must support troubleshooting without becoming a security liability.
+
+---
+
+# 37. SYSTEM HEALTH
+
+Create an admin system-health page.
+
+It should be able to check:
+
+```text
+PHP version
+SQLite availability
+database status
+required PHP extensions
+writable directories
+JSON content validity
+Worker connectivity
+storage configuration
+email configuration
+file upload configuration
+```
+
+Clearly distinguish:
+
+```text OK
+WARNING
+ERROR
+```
+
+The health system must not expose secrets.
+
+---
+
+# 38. BACKUPS
+
+Because SQLite is the production database, build a safe admin backup mechanism.
+
+Support:
+
+* database backup
+* downloadable backup for administrators
+* backup timestamps
+* retention strategy where practical
+* restoration instructions/documentation
+
+Never expose database backups publicly.
+
+Do not automatically delete backups without explicit policy.
+
+---
+
+# 39. DATABASE MIGRATIONS
+
+Create a lightweight migration system.
+
+Never modify the database structure manually without recording the change.
+
+Every schema change must have:
+
+* migration version
+* migration file
+* safe upgrade mechanism
+* documentation in `project.md`
+
+The application should be able to initialize a fresh database.
+
+---
+
+# 40. INSTALLATION / DEPLOYMENT
+
+The final project must be deployable to ordinary PHP shared hosting.
+
+Provide:
+
+```text
+README.md
+INSTALL.md
+DEPLOYMENT.md
+.env.example
+```
+
+The application should have a simple production installation process.
+
+Do not require SSH root access.
+
+Do not require systemd.
+
+Do not require Docker.
+
+Do not require a Python process.
+
+Do not require a Node server.
+
+Do not require a VPS.
+
+Do not assume Composer is permanently available on the production host unless the application genuinely needs it; if Composer is used, ensure dependencies can be prepared before upload.
+
+---
+
+# 41. FRONTEND QUALITY
+
+The UI must be:
+
+* responsive
+* mobile friendly
+* keyboard accessible where reasonable
+* visually consistent
+* performant
+* semantically structured
+* accessible
+* SEO-friendly
+
+Use reusable components.
+
+Avoid duplicated HTML/CSS patterns.
+
+Use a centralized design system.
+
+Use CSS variables for the visual theme.
+
+---
+
+# 42. SEO
+
+Implement a basic but solid SEO foundation:
+
+* semantic URLs
+* unique titles
+* meta descriptions
+* canonical URLs
+* Open Graph metadata
+* structured data where appropriate
+* sitemap
+* robots.txt
+* clean slugs
+* useful 404 pages
+
+Do not index private course/video pages inappropriately.
+
+---
+
+# 43. PERFORMANCE
+
+Optimize for cheap shared hosting.
+
+Use:
+
+* caching where appropriate
+* efficient SQLite queries
+* indexes
+* lazy-loaded images
+* optimized thumbnails
+* minimal JavaScript
+* asset caching
+* pagination
+* efficient JSON loading
+* reusable server-side content caches
+
+Do not build an architecture that requires expensive infrastructure.
+
+---
+
+# 44. CONTENT VALIDATION TOOLING
+
+Provide an admin/development tool that validates all JSON content.
+
+It should detect:
+
+* invalid JSON
+* duplicate IDs
+* duplicate slugs
+* missing required fields
+* invalid teacher references
+* invalid course references
+* missing storage ID
+* missing media filename
+* invalid media paths
+* duplicate video IDs
+* broken playlist references
+* malformed pricing structures
+* missing thumbnails where required
+
+Report problems clearly.
+
+---
+
+# 45. R2 CONTENT VALIDATION
+
+The storage/Worker management side should be able to validate media references without making the website download the media.
+
+The project already has a separate local Python R2 uploader/control tool conceptually.
+
+Do not rewrite that into the PHP site.
+
+The PHP application should consume the resulting content metadata.
+
+The local uploader remains an infrastructure/admin-development tool.
+
+---
+
+# 46. EXISTING R2 STORAGE ENVIRONMENT
+
+Existing R2 storage includes:
+
+```text
+b1-old
+r22
+r23
+r24
+```
+
+Future storage IDs/buckets may be:
+
+```text
+r25
+r26
+r27
+...
+```
+
+A single course can use several of them.
+
+Do not assume the bucket name is the course name.
+
+Do not assume one Cloudflare account equals one course.
+
+Do not assume one R2 account contains only one course.
+
+---
+
+# 47. CLOUDflare WORKER CONFIGURATION
+
+Do not place R2 secrets inside the website repository.
+
+The website only needs the Worker endpoint and its server-side authentication secret.
+
+The Worker manages its own R2 credential configuration.
+
+The Worker should remain independent of user authorization logic.
+
+The PHP website decides:
+
+```text user allowed?
+```
+
+The Worker decides:
+
+```text valid authenticated server request?
+valid storage?
+valid bucket?
+generate temporary media URL?
+```
+
+The website should never send user passwords or payment details to the Worker.
+
+---
+
+# 48. API DESIGN
+
+Create a clean internal PHP service layer.
+
+For example conceptually:
+
+```text
+AuthService
+UserService
+CourseService
+AccessService
+PaymentService
+EmailService
+ContentService
+StorageService
+WorkerService
+ThemeService
+AuditService
+```
+
+Controllers/routes should call services rather than implementing huge blocks of business logic.
+
+Do not over-engineer with unnecessary frameworks.
+
+Keep the code readable for a solo developer.
+
+---
+
+# 49. ROUTING
+
+Implement clean application routes.
+
+Examples:
+
+```text
+/
+ /login
+ /register
+ /verify-email
+ /forgot-password
+ /reset-password
+ /courses
+ /course/{slug}
+ /teacher/{slug}
+ /playlist/{slug}
+ /watch/{video}
+ /shorts
+ /free
+ /quiz/{slug}
+ /pdf/{slug}
+ /account
+ /dashboard
+ /admin
+```
+
+The exact routing implementation is flexible, but URLs must be stable and human-readable.
+
+Use centralized routing rather than scattering route logic through files.
+
+---
+
+# 50. ACCESSIBLE MEDIA FLOW
+
+The intended protected video flow is:
+
+```text
+User opens lesson
+        ↓
+PHP checks login
+        ↓
+PHP checks course access
+        ↓
+PHP reads static JSON metadata
+        ↓
+PHP identifies:
+    storage
+    bucket
+    video filename
+    subtitle filename
+        ↓
+PHP authenticates to Worker
+        ↓
+Worker validates request
+        ↓
+Worker generates temporary signed URLs
+        ↓
+PHP returns player configuration
+        ↓
+Browser streams directly from R2
+```
+
+Do not change this architecture without a strong technical reason.
+
+---
+
+# 51. PAYMENT + ACCESS FLOW
+
+Expected production flow:
+
+```text
+User
+ ↓
+Register/Login
+ ↓
+Browse courses
+ ↓
+Select teacher/version
+ ↓
+Select access duration
+ ↓
+Select payment method
+ ↓
+View payment details
+ ↓
+Pay manually
+ ↓
+Submit payer information + screenshot
+ ↓
+Admin reviews
+ ↓
+Admin approves
+ ↓
+System grants access
+ ↓
+User receives confirmation email
+ ↓
+User watches protected content
+```
+
+Rejected payments must not grant access.
+
+Expired access must automatically stop protected-content authorization.
+
+Admin must still be able to manually grant access when necessary.
+
+---
+
+# 52. ADMIN DASHBOARD
+
+The dashboard should summarize:
+
+```text total users
+new users
+active users
+pending payments
+approved payments
+rejected payments
+active course access
+expiring access
+popular courses
+recent activity
+system health
+Worker health
+content validation
+storage status if available
+```
+
+Keep the dashboard useful rather than cluttered.
+
+---
+
+# 53. ADMIN NOTIFICATIONS
+
+Create an admin notification system for important events:
+
+```text new user
+new payment submission
+payment awaiting review
+system error
+content validation error
+Worker failure
+```
+
+Allow notifications to be dismissed/read.
+
+---
+
+# 54. CONFIGURATION
+
+Centralize configurable values.
+
+Examples:
+
+```text site name
+site URL
+admin email
+Worker URL
+Worker secret
+session settings
+upload limits
+pagination sizes
+default signed URL expiry
+email settings
+theme values
+```
+
+Never hardcode secrets.
+
+---
+
+# 55. DOCUMENTATION
+
+Maintain excellent documentation:
+
+```text README.md
+PROJECT.md
+INSTALL.md
+DEPLOYMENT.md
+SECURITY.md
+DATABASE.md
+CONTENT_JSON.md
+WORKER_INTEGRATION.md
+```
+
+Keep documentation synchronized with implementation.
+
+---
+
+# 56. TESTING
+
+Each module should have tests appropriate to the environment.
+
+At minimum test:
+
+* authentication
+* registration
+* password hashing
+* verification tokens
+* reset tokens
+* authorization
+* course access
+* expired access
+* payment workflow
+* JSON parsing
+* malformed JSON
+* storage mapping
+* Worker communication
+* error handling
+* CSRF
+* upload security
+
+Test both valid and invalid paths.
+
+Before declaring the project production-ready, run a full regression checklist.
+
+---
+
+# 57. TEST / DEVELOPMENT DATA
+
+Use clearly marked development seed data.
+
+Never use fake development admin credentials in production.
+
+Never ship test secrets.
+
+Never ship real R2 credentials.
+
+Never ship real payment credentials.
+
+---
+
+# 58. GITHUB COMPATIBILITY
+
+The repository is the canonical project source.
+
+Every module must be committed in a way that another Replit account can clone and continue.
+
+Never rely on:
+
+```text
+one Replit account's hidden environment
+temporary files
+manual undocumented settings
+```
+
+Document required secrets/configuration.
+
+Provide an `.env.example`.
+
+Provide deployment/configuration instructions.
+
+---
+
+# 59. DEVELOPMENT ORDER
+
+Implement roughly in this order:
+
+## Phase 1
+
+Project foundation
+
+* folder structure
+* configuration
+* routing
+* base layout
+* logging
+* `project.md`
+* error handling
+* database initialization
+* migrations
+* deployment documentation
+
+## Phase 2
+
+Content engine
+
+* JSON schemas
+* content loader
+* content validation
+* teachers
+* courses
+* playlists
+* videos
+* shorts
+
+## Phase 3
+
+Authentication
+
+* registration
+* login
+* logout
+* sessions
+* verification
+* password reset
+* account settings
+
+## Phase 4
+
+Authorization
+
+* course access
+* teacher-specific offerings
+* time-limited access
+* lifetime access
+* manual grants/revocation
+
+## Phase 5
+
+R2/Worker integration
+
+* Worker service
+* storage mapping
+* signed URL requests
+* MP4
+* SRT
+* player integration
+* retry/error UX
+
+## Phase 6
+
+Commerce
+
+* products
+* prices
+* durations
+* payment methods
+* payment submission
+* screenshot upload
+* admin approval
+* access granting
+
+## Phase 7
+
+User experience
+
+* homepage
+* discovery
+* course pages
+* teacher pages
+* playlists
+* watch pages
+* shorts
+* dashboard
+* progress
+
+## Phase 8
+
+Admin
+
+* dashboard
+* user management
+* course management
+* payment management
+* access management
+* content validation
+* logs
+* system health
+* configuration
+
+## Phase 9
+
+Theme engine
+
+* CSS variables
+* admin theme editor
+* live preview
+* safe validation
+
+## Phase 10
+
+Security/performance/SEO
+
+* security audit
+* file-upload audit
+* SQL audit
+* session audit
+* caching
+* SEO
+* accessibility
+* performance
+
+## Phase 11
+
+Production readiness
+
+* deployment test
+* migration test
+* backup/restore test
+* email test
+* Worker test
+* payment workflow test
+* authorization test
+* security regression test
+* final documentation
+
+---
+
+# 60. IMPORTANT DEVELOPMENT BEHAVIOR
+
+You are acting as the project's primary engineering agent.
+
+Do not repeatedly ask the user to make architectural decisions that have already been specified above.
+
+Make reasonable implementation decisions yourself.
+
+When there are multiple technically valid choices, choose the simplest reliable option compatible with:
+
+```text
+PHP
+SQLite
+shared hosting
+low budget
+Cloudflare Worker
+Cloudflare R2
+```
+
+Do not introduce unnecessary infrastructure.
+
+Do not replace SQLite with MySQL unless there is a demonstrated requirement.
+
+Do not introduce a paid service unless explicitly approved.
+
+Do not redesign the R2 architecture without a concrete technical problem.
+
+---
+
+# 61. INTERACTION MODEL WITH THE USER
+
+Work in small completed modules.
+
+After each meaningful development action:
+
+1. Implement the change.
+2. Test the change.
+3. Update `project.md`.
+4. Append to `logs/development.log`.
+5. Clearly report:
+
+   * what was implemented
+   * files changed
+   * tests performed
+   * remaining TODOs
+   * next recommended module
+
+Never claim a feature works unless it was tested.
+
+Never delete working functionality without documenting why.
+
+When fixing a bug, log:
+
+```text
+problem
+cause
+fix
+verification
+```
+
+---
+
+# 62. PRODUCTION-READY DEFINITION
+
+Do not call GermanPath production-ready merely because the UI looks finished.
+
+Production-ready means:
+
+* authentication works
+* authorization works
+* paid course access works
+* expired access works
+* payment workflow works
+* admin workflow works
+* JSON validation works
+* Worker integration works
+* MP4/SRT playback works
+* security protections work
+* uploads are safe
+* database migrations work
+* backups work
+* error handling works
+* logs work
+* email verification works
+* password reset works
+* responsive UI works
+* accessibility basics are addressed
+* SEO basics are addressed
+* deployment to PHP shared hosting is documented and tested
+* no production secrets are committed
+* regression testing passes
+
+---
+
+# 63. START NOW
+
+Do not attempt to create every feature immediately.
+
+Start by:
+
+1. Inspecting the repository.
+2. Creating a clean modular PHP application structure.
+3. Creating `project.md`.
+4. Creating `logs/development.log`.
+5. Creating configuration handling.
+6. Creating the SQLite migration foundation.
+7. Creating the base routing/layout/error system.
+8. Testing the foundation.
+9. Updating documentation/logs.
+
+Then stop and report the completed foundation before moving into the next module.
+
+Remember:
+
+**GermanPath is a serious long-term project. Prioritize clean architecture, maintainability, security, low hosting cost, and portability over rushing to create lots of screens.**

@@ -1,0 +1,22 @@
+[2026-09-14T00:00:00Z] FOUNDATION started: inspected empty repository and master GermanPath specification.
+[2026-09-14T00:00:00Z] FOUNDATION files created: configuration, bootstrap, HTTP router/response/request, session, logger, SQLite database/migrator, public shell, CSS, docs, and direct tests.
+[2026-09-14T00:00:00Z] DATABASE migration created: 001_foundation.sql with app_settings, users, audit_logs, and indexes.
+[2026-09-14T00:00:00Z] SECURITY change: secrets moved to environment configuration; secure session cookie defaults, output escaping, CSRF primitive, exception safety, and log redaction added.
+[2026-09-14T00:00:00Z] BUG fixed: public entry point referenced the view helper namespace incorrectly; corrected to call the namespaced renderLayout function.
+[2026-09-14T00:00:00Z] TESTS passed: PHP lint, migration creation/idempotence, parameterized routing, 404 handling, and foundation assertions.
+[2026-09-14T00:00:00Z] REPOSITORY change: initialized local Git metadata; no remote configured.
+[2026-09-14T00:00:00Z] CONTENT started: implemented schema-versioned JSON collections, validator, loader, safe cache, lookup helpers, validation report, and development fixtures.
+[2026-09-14T00:00:00Z] CONTENT files created: teachers, courses, playlists, videos, shorts, pages, site settings, and content tests.
+[2026-09-14T00:00:00Z] CONTENT integration: /courses, /course/{slug}, and /free now read validated JSON content.
+[2026-09-14T00:00:00Z] TESTS passed: PHP lint, foundation suite, content suite, and live HTTP smoke tests for /courses, /course/b1-german, and /free.
+[2026-09-14T00:00:00Z] CONTENT integrity: added cross-collection reference and duplicate-ID validation with broken-reference tests.
+[2026-09-14T00:00:00Z] TESTS passed: PHP lint, foundation suite, content suite including cross-reference checks.
+[2026-09-14T00:00:00Z] AUTH started: added auth token migration, AuthService, email service abstraction, secure sessions, CSRF-protected account routes, and account forms.
+[2026-09-14T00:00:00Z] AUTH security: passwords use PHP password hashing; verification/reset/email-change tokens are hashed, time-limited, and single-use; email-change uniqueness is rechecked at confirmation.
+[2026-09-14T00:00:00Z] TESTS passed: PHP lint, foundation/content/auth suites, and live registration/login/account route smoke tests.
+[2026-09-14T00:00:00Z] AUTH hardening: added persistent email/IP login throttling and structured authentication audit events.
+[2026-09-14T00:00:00Z] TESTS passed: PHP lint, foundation/content/auth suites including throttling and audit assertions.
+[2026-09-15T00:00:00Z] COMMERCE started: added course-specific offer resolution, payment methods, payment submissions, course access, access history, and admin authorization.
+[2026-09-15T00:00:00Z] COMMERCE integration: added student purchase and admin payment-review routes; payment claims remain pending until manual approval.
+[2026-09-15T00:00:00Z] TESTS passed: PHP lint, foundation/content/auth/payment suites, and live HTTP smoke tests for courses, health, and unauthenticated purchase access.
+[2026-09-15T00:00:00Z] TODO: secure payment-proof uploads, payment notifications, protected media delivery, Worker/R2 integration, progress, and production deployment hardening remain.

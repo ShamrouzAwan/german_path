@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "type": "video",
+  "id": "video-infinitiv-zu",
+  "slug": "infinitiv-zu",
+  "title": "Infinitiv + zu",
+  "description": "Wann du im Deutschen den Infinitiv mit zu verwendest.",
+  "thumbnail": "/assets/videos/infinitiv-zu.jpg",
+  "duration": "09:42",
+  "teacher_id": "teacher-anna",
+  "course_id": "course-b1-german",
+  "playlist_id": "playlist-b1-grammar",
+  "position": 1,
+  "published": true,
+  "is_free": false,
+  "storage": "r2-primary",
+  "video": "b1/infinitiv-zu.mp4",
+  "subtitle": "b1/infinitiv-zu.srt",
+  "subtitle_tracks": ["b1/infinitiv-zu-en.srt"]
+}

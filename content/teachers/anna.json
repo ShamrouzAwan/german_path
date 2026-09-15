@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "type": "teacher",
+  "id": "teacher-anna",
+  "name": "Anna Schmidt",
+  "display_name": "Anna",
+  "bio": "Deutschlehrerin mit einem Fokus auf verständliche Grammatik und Alltagssprache.",
+  "photo": "/assets/teachers/anna.jpg",
+  "country": "DE",
+  "languages": ["de", "en"]
+}

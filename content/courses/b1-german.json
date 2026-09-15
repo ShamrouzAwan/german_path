@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "type": "course",
+  "id": "course-b1-german",
+  "slug": "b1-german",
+  "title": "Deutsch B1: Sicher im Alltag",
+  "short_description": "Grammatik, Wortschatz und Gespräche für deinen nächsten Lernschritt.",
+  "description": "Ein strukturierter B1-Kurs mit kurzen Lektionen, verständlichen Erklärungen und praktischen Übungen.",
+  "teacher_ids": ["teacher-anna", "teacher-lukas"],
+  "level": "B1",
+  "language": "de",
+  "category": "German Grammar",
+  "cover": "/assets/courses/b1-german-cover.jpg",
+  "thumbnail": "/assets/courses/b1-german-thumbnail.jpg",
+  "banner": "/assets/courses/b1-german-banner.jpg",
+  "tags": ["grammar", "conversation", "everyday-german"],
+  "requirements": ["A2 German", "Basic sentence structure"],
+  "learning_outcomes": ["Explain common B1 grammar", "Speak more confidently in everyday situations"],
+  "target_audience": "Learners who have completed A2 German.",
+  "duration": "8 weeks",
+  "total_lessons": 2,
+  "total_videos": 3,
+  "featured": true,
+  "is_free": false,
+  "pricing": {
+    "currency": "EUR",
+    "amount": 49,
+    "billing": "one_time"
+  },
+  "access_options": ["30_days", "90_days", "lifetime"],
+  "offers": [
+    {
+      "id": "offer-b1-anna",
+      "teacher_id": "teacher-anna",
+      "title": "B1 mit Anna",
+      "access_options": [
+        {"duration": "30_days", "amount_cents": 1900, "currency": "EUR"},
+        {"duration": "90_days", "amount_cents": 3900, "currency": "EUR"},
+        {"duration": "lifetime", "amount_cents": 8900, "currency": "EUR"}
+      ]
+    },
+    {
+      "id": "offer-b1-lukas",
+      "teacher_id": "teacher-lukas",
+      "title": "B1 mit Lukas",
+      "access_options": [
+        {"duration": "30_days", "amount_cents": 2100, "currency": "EUR"},
+        {"duration": "90_days", "amount_cents": 4200, "currency": "EUR"},
+        {"duration": "lifetime", "amount_cents": 9500, "currency": "EUR"}
+      ]
+    }
+  ],
+  "published": true
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "type": "short",
+  "id": "short-der-die-das",
+  "slug": "der-die-das",
+  "title": "Der, die oder das?",
+  "description": "Ein schneller Tipp für deutsche Artikel.",
+  "thumbnail": "/assets/shorts/der-die-das.jpg",
+  "duration": "00:45",
+  "teacher_id": "teacher-lukas",
+  "published": true,
+  "is_free": true,
+  "storage": "r2-primary",
+  "video": "shorts/der-die-das.mp4",
+  "subtitle": "shorts/der-die-das.srt"
+}

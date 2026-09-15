@@ -1,0 +1,23 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data
+/storage/*.sqlite
+/storage/*.sqlite-*
+/storage/private/
+/storage/uploads/
+/storage/cache/
+/storage/*.log
+/logs/*.log
+!/logs/development.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Composer artifacts are intentionally ignored until a dependency is introduced.
+/vendor/

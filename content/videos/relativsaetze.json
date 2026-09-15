@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "type": "video",
+  "id": "video-relativsaetze",
+  "slug": "relativsaetze",
+  "title": "Relativsätze verstehen",
+  "description": "Relativsätze Schritt für Schritt mit Beispielen aus dem Alltag.",
+  "thumbnail": "/assets/videos/relativsaetze.jpg",
+  "duration": "12:18",
+  "teacher_id": "teacher-lukas",
+  "course_id": "course-b1-german",
+  "playlist_id": "playlist-b1-grammar",
+  "position": 2,
+  "published": true,
+  "is_free": false,
+  "storage": "r2-secondary",
+  "video": "b1/relativsaetze.mp4",
+  "subtitle": "b1/relativsaetze.srt",
+  "subtitle_tracks": []
+}
